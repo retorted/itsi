@@ -1,4 +1,4 @@
-use super::file_watcher::{self};
+use super::file_watcher::{self, WatcherCommand};
 use crate::{
     ruby_types::ITSI_SERVER_CONFIG,
     server::{
@@ -9,7 +9,7 @@ use crate::{
 use derive_more::Debug;
 use itsi_error::ItsiError;
 use itsi_rb_helpers::{call_with_gvl, print_rb_backtrace, HeapValue};
-use itsi_tracing::{set_format, set_level, set_target, set_target_filters};
+use itsi_tracing::{error, set_format, set_level, set_target, set_target_filters};
 use magnus::{
     block::Proc,
     error::Result,
@@ -18,12 +18,12 @@ use magnus::{
 };
 use nix::{
     fcntl::{fcntl, FcntlArg, FdFlag},
-    unistd::{close, dup},
+    unistd::dup,
 };
 use parking_lot::{Mutex, RwLock};
 use std::{
     collections::HashMap,
-    os::fd::{AsRawFd, OwnedFd, RawFd},
+    os::fd::RawFd,
     path::PathBuf,
     str::FromStr,
     sync::{
@@ -32,7 +32,7 @@ use std::{
     },
     time::Duration,
 };
-use tracing::{debug, error};
+use tracing::debug;
 static DEFAULT_BIND: &str = "http://localhost:3000";
 static ID_BUILD_CONFIG: LazyId = LazyId::new("build_config");
 static ID_RELOAD_EXEC: LazyId = LazyId::new("reload_exec");
@@ -44,7 +44,7 @@ pub struct ItsiServerConfig {
     pub itsi_config_proc: Arc<Option<HeapValue<Proc>>>,
     #[debug(skip)]
     pub server_params: Arc<RwLock<Arc<ServerParams>>>,
-    pub watcher_fd: Arc<Option<OwnedFd>>,
+    pub watcher_fd: Arc<Option<file_watcher::WatcherPipes>>,
 }
 
 #[derive(Debug)]
@@ -557,6 +557,9 @@ impl ItsiServerConfig {
     }
 
     pub fn dup_fds(self: &Arc<Self>) -> Result<()> {
+        // Ensure the watcher is already stopped before duplicating file descriptors
+        // to prevent race conditions between closing the watcher FD and duplicating socket FDs
+
         let binding = self.server_params.read();
         let mut listener_info_guard = binding.listener_info.lock();
         let dupped_fd_map = listener_info_guard
@@ -582,8 +585,10 @@ impl ItsiServerConfig {
     }
 
     pub fn stop_watcher(self: &Arc<Self>) -> Result<()> {
-        if let Some(r_fd) = self.watcher_fd.as_ref() {
-            close(r_fd.as_raw_fd()).ok();
+        if let Some(pipes) = self.watcher_fd.as_ref() {
+            // Send explicit stop command to the watcher process
+            file_watcher::send_watcher_command(&pipes.write_fd, WatcherCommand::Stop)?;
+            // We don't close the pipes here - they'll be closed when the WatcherPipes is dropped
         }
         Ok(())
     }
@@ -598,7 +603,23 @@ impl ItsiServerConfig {
     pub async fn check_config(&self) -> bool {
         if let Some(errors) = self.get_config_errors().await {
             Self::print_config_errors(errors);
+            // Notify watcher that config check failed
+            if let Some(pipes) = self.watcher_fd.as_ref() {
+                if let Err(e) =
+                    file_watcher::send_watcher_command(&pipes.write_fd, WatcherCommand::ConfigError)
+                {
+                    error!("Failed to notify watcher of config error: {}", e);
+                }
+            }
             return false;
+        }
+        // If we reach here, the config is valid
+        if let Some(pipes) = self.watcher_fd.as_ref() {
+            if let Err(e) =
+                file_watcher::send_watcher_command(&pipes.write_fd, WatcherCommand::Continue)
+            {
+                error!("Failed to notify watcher to continue: {}", e);
+            }
         }
         true
     }
@@ -613,7 +634,8 @@ impl ItsiServerConfig {
                     )
                 })?;
 
-        self.stop_watcher()?;
+        // Make sure we're not calling stop_watcher here to avoid double-stopping
+        // The watcher should be stopped earlier in the restart sequence
         call_with_gvl(|ruby| -> Result<()> {
             ruby.get_inner_ref(&ITSI_SERVER_CONFIG)
                 .funcall::<_, _, Value>(*ID_RELOAD_EXEC, (listener_json,))?;

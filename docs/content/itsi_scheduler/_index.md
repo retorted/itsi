@@ -105,8 +105,8 @@ to run many blocking operations simultaneously all while occupying only a single
 
 ### 3 (Optional) - Enable Scheduler Refinements
 You can opt-in to a tiny set of Ruby refinements provided by the `Itsi::Scheduler` to make usage even more ergonomic.
-By opting in to this refinement (using `using Itsi::Scheduler`) you gain access to the top-level #schedule(&block) method, as well
-as enumerable methods #schedule_each, and #schedule_map.
+By opting in to this refinement (using `using Itsi::ScheduleRefinement`) you gain access to the top-level `#schedule(&block)` method, as well
+as enumerable methods `#schedule_each`, and `#schedule_map`.
 
 ```ruby
 require 'net/http'

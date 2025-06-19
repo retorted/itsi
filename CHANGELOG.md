@@ -1,6 +1,8 @@
 ## [0.2.18] - 2025-XX-XX
 ### WIP
 -- Fixing error in auto-reload on Linux when reuse_port is false
+-- Fix breaking of auto-reload on config file errors
+-- include directive is relative (equivalent to require_relative)
 -- Fixing preload gem group logic
 -- Fix errors in interrupt handling during some debug flows
 

@@ -268,7 +268,7 @@ impl SingleMode {
         // To take advantage of this, these forks will rebind to the same port upon boot.
         // Worker 0 is special (this one just inherits the bind from the master process).
         let is_zero_worker = self.is_zero_worker();
-        let should_rebind = !is_zero_worker || self.server_config.use_reuse_port_load_balancing();
+        let should_rebind = !is_zero_worker && self.server_config.use_reuse_port_load_balancing();
 
         if monitor_thread.is_none() {
             error!("Failed to start monitor thread");
@@ -318,7 +318,7 @@ impl SingleMode {
                 let mut after_accept_wait: Option<Duration> = None::<Duration>;
 
                 if cfg!(target_os = "macos") {
-                    after_accept_wait = if server_params.workers > 1 {
+                    after_accept_wait = if server_params.workers > 1 && !(server_params.socket_opts.reuse_port && server_params.socket_opts.reuse_address) {
                         Some(Duration::from_nanos(10 * server_params.workers as u64))
                     } else {
                         None
@@ -441,6 +441,7 @@ impl SingleMode {
         if self.is_single_mode() {
             self.invoke_hook("before_restart");
         }
+        self.server_config.stop_watcher()?;
         self.server_config.dup_fds()?;
         self.server_config.reload_exec()?;
         Ok(())
