@@ -7,6 +7,7 @@ Use the `include` option to load additional files to be evaluated within the cur
 You can use this option to split a large configuration file into multiple smaller files.
 
 Files required using `include` are also subject to auto-reloading, when using the [auto_reload_config](/options/auto_reload_config) option.
+The path of the included file is evaluated relative to the current configuration file.
 
 ## Examples
 ```ruby {filename="Itsi.rb"}

@@ -34,7 +34,7 @@ It's mature, stable and rock solid. Many features and interfaces of Itsi have be
 It's highly scalable and a great choice for high-traffic websites.
 Many of Itsi's proxy and static file server design decisions and features have been inspired by their NGINX equivalents.
 
-* The [Async](https://github.com/socketry/async) ecosystem and [Falcon](https://github.com/socketry/falcon), championed by [@ioaquatix](https://github.com/ioquatix) - a fellow Kiwi.
+* The [Async](https://github.com/socketry/async) ecosystem and [Falcon](https://github.com/socketry/falcon), championed by [@ioquatix](https://github.com/ioquatix) - a fellow Kiwi.
 These tools and efforts in driving forward Ruby's cooperative multitasking have been a great inspiration and source of learning for Itsi's async IO design.
 
 * [Iodine](https://github.com/boazsegev/iodine), [Agoo](https://github.com/ohler55/agoo). Two class-leading options when it comes to blazing fast Ruby servers written in native code.

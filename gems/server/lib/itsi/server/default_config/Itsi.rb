@@ -10,7 +10,7 @@ env = ENV.fetch("APP_ENV") { ENV.fetch("RACK_ENV", "development") }
 
 # Number of worker processes to spawn
 # If more than 1, Itsi will be booted in Cluster mode
-workers ENV["ITSI_WORKERS"]&.to_i || env == "development" ? 1 : nil
+workers ENV["ITSI_WORKERS"]&.to_i || (env == "development" ? 1 : nil)
 
 # Number of threads to spawn per worker process
 # For pure CPU bound applicationss, you'll get the best results keeping this number low
@@ -27,11 +27,13 @@ threads ENV.fetch("ITSI_THREADS", 3)
 fiber_scheduler nil
 
 # If you bind to https, without specifying a certificate, Itsi will use a self-signed certificate.
-# The self-signed certificate will use a CA generated for your host and stored inside `ITSI_LOCAL_CA_DIR` (Defaults to ~/.itsi)
+# The self-signed certificate will use a CA generated for your
+# host and stored inside `ITSI_LOCAL_CA_DIR` (Defaults to ~/.itsi)
 # bind "https://0.0.0.0:3000"
 # bind "https://0.0.0.0:3000?domains=dev.itsi.fyi"
 #
-# If you want to use let's encrypt to generate you a real certificate you and pass cert=acme and an acme_email address to generate one.
+# If you want to use let's encrypt to generate you a real certificate you
+# and pass cert=acme and an acme_email address to generate one.
 # bind "https://itsi.fyi?cert=acme&acme_email=admin@itsi.fyi"
 # You can generate certificates for multiple domains at once, by passing a comma-separated list of domains
 # bind "https://0.0.0.0?domains=foo.itsi.fyi,bar.itsi.fyi&cert=acme&acme_email=admin@itsi.fyi"
@@ -68,7 +70,8 @@ preload true
 # all of them at once, if they reach the threshold simultaneously.
 worker_memory_limit 1024 * 1024 * 1024
 
-# You can provide an optional block of code to run, when a worker hits its memory threshold (Use this to send yourself an alert,
+# You can provide an optional block of code to run, when a worker hits its memory threshold
+# (Use this to send yourself an alert,
 # write metrics to disk etc. etc.)
 after_memory_limit_reached do |pid|
   puts "Worker #{pid} has reached its memory threshold and will restart"
@@ -85,7 +88,8 @@ after_fork {}
 shutdown_timeout 5
 
 # Set this to false for application environments that require rack.input to be a rewindable body
-# (like Rails). For rack applications that can stream inputs, you can set this to true for a more memory-efficient approach.
+# (like Rails). For rack applications that can stream inputs, you can set this to true for a more
+# memory-efficient approach.
 stream_body false
 
 # OOB GC responses threshold

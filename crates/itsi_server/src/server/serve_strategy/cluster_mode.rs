@@ -100,9 +100,11 @@ impl ClusterMode {
             LifecycleEvent::Restart => {
                 if self.server_config.check_config().await {
                     self.invoke_hook("before_restart");
+                    self.server_config.stop_watcher()?;
                     self.server_config.dup_fds()?;
                     self.shutdown().await.ok();
                     info!("Shutdown complete. Calling reload exec");
+
                     self.server_config.reload_exec()?;
                 }
                 Ok(())
@@ -111,8 +113,11 @@ impl ClusterMode {
                 if !self.server_config.check_config().await {
                     return Ok(());
                 }
+
                 let should_reexec = self.server_config.clone().reload(true)?;
+
                 if should_reexec {
+                    self.server_config.stop_watcher()?;
                     self.server_config.dup_fds()?;
                     self.shutdown().await.ok();
                     self.server_config.reload_exec()?;
@@ -320,15 +325,6 @@ impl ClusterMode {
             .lock()
             .iter()
             .try_for_each(|worker| worker.boot(Arc::clone(&self)))?;
-
-        if cfg!(target_os = "linux") {
-            self.server_config
-                .server_params
-                .write()
-                .listeners
-                .lock()
-                .drain(..);
-        };
 
         let (sender, mut receiver) = watch::channel(());
         *CHILD_SIGNAL_SENDER.lock() = Some(sender);

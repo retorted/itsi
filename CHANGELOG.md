@@ -1,3 +1,11 @@
+## [0.2.18] - 2025-XX-XX
+### WIP
+-- Fixing error in auto-reload on Linux when reuse_port is false
+-- Fix breaking of auto-reload on config file errors
+-- include directive is relative (equivalent to require_relative)
+-- Fixing preload gem group logic
+-- Fix errors in interrupt handling during some debug flows
+
 ## [0.2.17] - 2025-05-31
 - Enabled vectorized writes in IoSteam
 - Replaced all usage of heap-allocated BoxBody with HttpBody enums
