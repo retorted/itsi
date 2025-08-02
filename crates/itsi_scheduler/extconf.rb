@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
-require "mkmf"
-require "rb_sys/mkmf"
+require 'mkmf'
+require 'rb_sys/mkmf'
 
-create_rust_makefile("itsi/scheduler/itsi_scheduler") do |r|
-  r.extra_rustflags = ["-C target-cpu=native"]
+create_rust_makefile('itsi/scheduler/itsi_scheduler') do |r|
+  r.extra_rustflags = ['-C target-cpu=native']
+  r.env = {
+    'BINDGEN_EXTRA_CLANG_ARGS' => '-include stdbool.h -std=c99'
+  }
 end

@@ -1,11 +1,12 @@
 use std::{
     collections::VecDeque,
-    sync::atomic::{AtomicBool, AtomicI8},
+    sync::atomic::{AtomicBool, AtomicI8, Ordering},
 };
 
 use nix::libc::{self, sighandler_t};
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
+use tracing::{debug, warn};
 
 use super::lifecycle_event::LifecycleEvent;
 
@@ -21,12 +22,14 @@ pub fn subscribe_runtime_to_signals() -> broadcast::Receiver<LifecycleEvent> {
     if let Some(sender) = guard.as_ref() {
         return sender.subscribe();
     }
-    let (sender, receiver) = broadcast::channel(5);
+    let (sender, receiver) = broadcast::channel(32);
     let sender_clone = sender.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(std::time::Duration::from_millis(10));
         for event in PENDING_QUEUE.lock().drain(..) {
-            sender_clone.send(event).ok();
+            if let Err(e) = sender_clone.send(event) {
+                eprintln!("Warning: Failed to send pending lifecycle event {:?}", e);
+            }
         }
     });
 
@@ -41,22 +44,36 @@ pub fn unsubscribe_runtime() {
 
 pub fn send_lifecycle_event(event: LifecycleEvent) {
     if let Some(sender) = SIGNAL_HANDLER_CHANNEL.lock().as_ref() {
-        sender.send(event).ok();
+        if let Err(e) = sender.send(event) {
+            // Channel full or receivers dropped - this is a critical error for shutdown signals
+            eprintln!("Critical: Failed to send lifecycle event {:?}", e);
+            // For shutdown events, try to force exit if channel delivery fails
+            if matches!(
+                e.0,
+                LifecycleEvent::Shutdown | LifecycleEvent::ForceShutdown
+            ) {
+                eprintln!("Emergency shutdown due to signal delivery failure");
+                std::process::exit(1);
+            }
+        }
     } else {
         PENDING_QUEUE.lock().push_back(event);
     }
 }
 
 fn receive_signal(signum: i32, _: sighandler_t) {
-    SIGINT_COUNT.fetch_add(-1, std::sync::atomic::Ordering::SeqCst);
+    debug!("Received signal: {}", signum);
+    SIGINT_COUNT.fetch_add(-1, Ordering::SeqCst);
     let event = match signum {
         libc::SIGTERM | libc::SIGINT => {
-            SHUTDOWN_REQUESTED.store(true, std::sync::atomic::Ordering::SeqCst);
-            SIGINT_COUNT.fetch_add(2, std::sync::atomic::Ordering::SeqCst);
-            if SIGINT_COUNT.load(std::sync::atomic::Ordering::SeqCst) < 2 {
+            debug!("Received shutdown signal (SIGTERM/SIGINT)");
+            SHUTDOWN_REQUESTED.store(true, Ordering::SeqCst);
+            SIGINT_COUNT.fetch_add(2, Ordering::SeqCst);
+            if SIGINT_COUNT.load(Ordering::SeqCst) < 2 {
+                debug!("First shutdown signal, requesting graceful shutdown");
                 Some(LifecycleEvent::Shutdown)
             } else {
-                // Not messing about. Force shutdown.
+                warn!("Multiple shutdown signals received, forcing immediate shutdown");
                 Some(LifecycleEvent::ForceShutdown)
             }
         }
@@ -70,13 +87,17 @@ fn receive_signal(signum: i32, _: sighandler_t) {
     };
 
     if let Some(event) = event {
+        debug!("Signal {} mapped to lifecycle event: {:?}", signum, event);
         send_lifecycle_event(event);
+    } else {
+        debug!("Signal {} not mapped to any lifecycle event", signum);
     }
 }
 
 pub fn reset_signal_handlers() -> bool {
-    SIGINT_COUNT.store(0, std::sync::atomic::Ordering::SeqCst);
-    SHUTDOWN_REQUESTED.store(false, std::sync::atomic::Ordering::SeqCst);
+    debug!("Resetting signal handlers");
+    SIGINT_COUNT.store(0, Ordering::SeqCst);
+    SHUTDOWN_REQUESTED.store(false, Ordering::SeqCst);
 
     unsafe {
         libc::signal(libc::SIGTERM, receive_signal as usize);
@@ -92,6 +113,7 @@ pub fn reset_signal_handlers() -> bool {
 }
 
 pub fn clear_signal_handlers() {
+    debug!("Clearing signal handlers");
     unsafe {
         libc::signal(libc::SIGTERM, libc::SIG_DFL);
         libc::signal(libc::SIGINT, libc::SIG_DFL);

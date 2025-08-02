@@ -39,7 +39,7 @@ How to identify the client:
   ```
   or
   ```ruby
-  key: { parameter: { query:  { name: "user_id" } } }
+  key: { parameter: { query: "user_id" } }
   ```
 
 ### `store_config`

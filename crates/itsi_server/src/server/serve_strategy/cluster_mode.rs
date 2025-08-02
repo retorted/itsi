@@ -377,9 +377,13 @@ impl ClusterMode {
               }
               lifecycle_event = lifecycle_rx.recv() => match lifecycle_event{
                 Ok(lifecycle_event) => {
+                  debug!("Cluster mode received lifecycle event: {:?}", lifecycle_event);
                   if let Err(e) = self_ref.clone().handle_lifecycle_event(lifecycle_event).await{
                     match e {
-                      ItsiError::Break => break,
+                      ItsiError::Break => {
+                        debug!("Lifecycle event triggered shutdown, breaking cluster monitor loop");
+                        break;
+                      },
                       _ => error!("Error in handle_lifecycle_event {:?}", e)
                     }
                   }
