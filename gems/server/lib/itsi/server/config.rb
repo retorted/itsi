@@ -9,6 +9,7 @@ module Itsi
       require_relative "default_app/default_app"
 
       ITSI_DEFAULT_CONFIG_FILE = "Itsi.rb"
+      ITSI_SERVER_PID_DIR = ENV.fetch("ITSI_SERVER_PID_DIR", "tmp")
 
       def self.prep_reexec!
         @argv ||= ARGV[0...ARGV.index("--listeners")]
@@ -248,8 +249,8 @@ module Itsi
       end
 
       def self.pid_file_path
-        if Dir.exist?("tmp")
-          File.join("tmp", "itsi.pid")
+        if Dir.exist?(ITSI_SERVER_PID_DIR)
+          File.join(ITSI_SERVER_PID_DIR, "itsi.pid")
         else
           ".itsi.pid"
         end

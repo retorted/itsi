@@ -1,3 +1,6 @@
+## [0.2.20] - 2025-09-01
+- Ensured Itsi server can run within a read-only file-system
+
 ## [0.2.19] - 2025-08-09
 - Fixed shutdown hook incorrectly being skipped
 - Documentation fixes

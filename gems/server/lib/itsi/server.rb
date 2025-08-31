@@ -94,6 +94,8 @@ module Itsi
 
       def write_pid
         File.write(Itsi::Server::Config.pid_file_path, Process.pid)
+      rescue => e
+        Itsi.log_error e.message
       end
 
       def get_pid(warn = true)
