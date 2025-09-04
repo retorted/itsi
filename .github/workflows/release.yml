@@ -12,13 +12,17 @@ jobs:
         platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
 
     runs-on: ubuntu-latest
+    
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
 
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
+          working-directory: ./gems/server
           bundler-cache: true
-          ruby-version: "3.1" 
+          ruby-version: "3.1"
       - name: Compile itsi-server
         uses: oxidize-rb/actions/cross-gem@v1
         with:
