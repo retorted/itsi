@@ -9,7 +9,7 @@ PATH
   remote: gems/scheduler
   specs:
     itsi-scheduler (0.2.20)
-      rb_sys (~> 0.9.91)
+      rb_sys (~> 0.9.111)
 
 PATH
   remote: gems/server
@@ -18,7 +18,7 @@ PATH
       json (~> 2)
       prism (~> 1.4)
       rack (>= 1.6)
-      rb_sys (~> 0.9.91)
+      rb_sys (~> 0.9.111)
 
 GEM
   remote: https://rubygems.org/
