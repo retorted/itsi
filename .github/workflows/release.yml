@@ -22,8 +22,6 @@ jobs:
   cross-compile:
     runs-on: ubuntu-22.04
     needs: build-source
-    env:
-      BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
     strategy:
       matrix:
         platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
@@ -36,7 +34,6 @@ jobs:
       - name: Compile itsi-server
         uses: oxidize-rb/actions/cross-gem@v1
         with:
-          working-directory: ./gems/server
           platform: ${{ matrix.platform }}
           ruby-versions: "3.1"
       - uses: actions/upload-artifact@v4
