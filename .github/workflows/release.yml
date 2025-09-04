@@ -22,6 +22,8 @@ jobs:
   cross-compile:
     runs-on: ubuntu-22.04
     needs: build-source
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
     strategy:
       matrix:
         platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
