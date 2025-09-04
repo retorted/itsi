@@ -13,7 +13,7 @@ jobs:
         with:
           bundler-cache: true
           ruby-version: "3.1"
-      - run: bundle exec build
+      - run: bundle exec rake build
       - uses: actions/upload-artifact@v4
         with:
           name: source-gem
