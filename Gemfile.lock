@@ -319,7 +319,7 @@ DEPENDENCIES
   rackup
   rake (~> 13.0)
   rake-compiler
-  rb_sys (~> 0.9.91)
+  rb_sys (~> 0.9.111)
   redis
   rubocop (~> 1.21)
   ruby-lsp
