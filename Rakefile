@@ -23,6 +23,19 @@ GEMS = [
     rust_name: 'itsi_server'
   }
 ]
+
+PLATFORMS = %i[x86_64-linux aarch64-linux x86_64-darwin arm64-darwin x64-mingw-ucrt]
+
+PLATFORMS.each do |platform|
+	namespace :native do
+		task platform, :option do |task, args|
+			GEMS.each do |gem|
+				sh "cd #{gem[:dir]} && bundle exec rake #{task} gem"
+			end
+    end
+	end
+end
+
 SHARED_TASKS = %i[compile compile:dev test]
 
 GEMS.each do |gem|
