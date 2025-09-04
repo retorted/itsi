@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ["x86_64-linux", "aarch64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
+        platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
 
     runs-on: ubuntu-latest
 
@@ -18,9 +18,12 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.1"
-      - uses: oxidize-rb/actions/cross-gem@v1
+      - name: Compile itsi-server
+        uses: oxidize-rb/actions/cross-gem@v1
         with:
+          working-directory: ./gems/server
           platform: ${{ matrix.platform }}
+          ruby-versions: "3.1,3.2,3.3,3.4"
       - uses: actions/upload-artifact@v4
         with:
           name: gem-${{ matrix.platform }}
