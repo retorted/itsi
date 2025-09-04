@@ -19,10 +19,12 @@ jobs:
         with:
           bundler-cache: true
           ruby-version: "3.1"
+          cache-version: 1
       - uses: oxidize-rb/actions/cross-gem@v1
         with:
           platform: ${{ matrix.platform }}
           ruby-versions: "3.1"
+          cache-version: 1
       - uses: actions/upload-artifact@v4
         with:
           name: gem-${{ matrix.platform }}
