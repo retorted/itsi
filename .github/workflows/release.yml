@@ -5,26 +5,38 @@ on:
     tags: ["v*"]
 
 jobs:
-  cross_compile:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
-
+  build-source:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: "3.1"
-          cache-version: 1
-      - uses: oxidize-rb/actions/cross-gem@v1
+      - run: bundle exec build
+      - uses: actions/upload-artifact@v4
         with:
+          name: source-gem
+          path: pkg/*.gem
+
+  cross-compile:
+    runs-on: ubuntu-22.04
+    needs: build-source
+    strategy:
+      matrix:
+        platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: "3.1"
+      - name: Compile itsi-server
+        uses: oxidize-rb/actions/cross-gem@v1
+        with:
+          working-directory: ./gems/server
           platform: ${{ matrix.platform }}
           ruby-versions: "3.1"
-          cache-version: 1
       - uses: actions/upload-artifact@v4
         with:
           name: gem-${{ matrix.platform }}
