@@ -24,15 +24,19 @@ GEMS = [
   }
 ]
 
-task :precompile_linux do
-	Rake::Task[:sync_crates].invoke
-	GEMS.each do |gem_info|
-    Dir.chdir(gem_info[:dir]) do
-      system("rake native:x86_64-linux gem") or raise 'Gem build failed'
-      built_gem = Dir['pkg/*x86_64-linux.gem'].first
-      FileUtils.mkdir_p('../../pkg')
-      FileUtils.mv(built_gem, "../../#{built_gem}")
-    end
+namespace :precompile do
+	%i[x86_64-linux arm64-darwin].each do |arch|
+		task arch do
+			Rake::Task[:sync_crates].invoke
+			GEMS.each do |gem_info|
+		    Dir.chdir(gem_info[:dir]) do
+		      system("rake native:#{arch} gem") or raise 'Gem build failed'
+		      built_gem = Dir["pkg/*#{arch}.gem"].first
+		      FileUtils.mkdir_p('../../pkg')
+		      FileUtils.mv(built_gem, "../../#{built_gem}")
+		    end
+			end
+		end
 	end
 end
 
