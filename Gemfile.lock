@@ -184,7 +184,6 @@ GEM
     parser (3.3.8.0)
       ast (~> 2.4.1)
       racc
-    pg (1.5.9)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -314,7 +313,6 @@ DEPENDENCIES
   minitest (~> 5.16)
   minitest-reporters
   net_http_unix
-  pg
   rack
   rackup
   rake (~> 13.0)

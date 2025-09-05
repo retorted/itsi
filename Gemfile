@@ -8,7 +8,7 @@ group :test do
   gem 'activerecord'
   gem 'jwt'
   gem 'net_http_unix'
-  gem 'pg'
+#   gem 'pg'
   gem 'redis'
 end
 
