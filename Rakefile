@@ -24,14 +24,14 @@ GEMS = [
   }
 ]
 
-PLATFORMS = %i[x86_64-linux aarch64-linux x86_64-darwin arm64-darwin x64-mingw-ucrt]
-
-PLATFORMS.each do |platform|
-	namespace :native do
-		task platform do
-			GEMS.each do |gem|
-				sh "cd #{gem[:dir]} && bundle exec rake native:#{platform} gem"
-			end
+task :precompile_linux do
+	Rake::Task[:sync_crates].invoke
+	GEMS.each do |gem_info|
+    Dir.chdir(gem_info[:dir]) do
+      system("rake native:x86_64-linux gem") or raise 'Gem build failed'
+      built_gem = Dir['pkg/*x86_64-linux.gem'].first
+      FileUtils.mkdir_p('../../pkg')
+      FileUtils.mv(built_gem, "../../#{built_gem}")
     end
 	end
 end
