@@ -10,10 +10,12 @@ jobs:
       matrix:
         include:
           - runner: ubuntu-22.04
-            arch: x86_64-linux
+            platform: x86_64-linux
+            name: x86_64-linux
             flags: "target-cpu=native"
           - runner: macos-15
-            arch: arm64-darwin-23
+            platform: arm64-darwin23
+            name: arm64-darwin
             flags: "target-cpu=apple-m4"
     runs-on: ${{ matrix.runner }}
     steps:
@@ -24,11 +26,11 @@ jobs:
           bundler-cache: true
       - run: rustc --print target-cpus
       - name: Build and precompile native gems
-        run: bundle exec rake build precompile:${{ matrix.arch }}
+        run: bundle exec rake build precompile:${{ matrix.platform }}
         env:
           RUSTFLAGS: "-C ${{ matrix.flags }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: precompiled-${{ matrix.arch }}
-          path: pkg/*-${{ matrix.arch }}.gem
+          name: precompiled-${{ matrix.name }}
+          path: pkg/*-${{ matrix.name }}.gem
           if-no-files-found: error

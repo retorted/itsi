@@ -85,15 +85,15 @@ task :build_all do
 end
 
 namespace :precompile do
-	%i[x86_64-linux arm64-darwin-23].each do |platform|
+	%i[x86_64-linux arm64-darwin23].each do |platform|
 		task platform do
 			Rake::Task[:sync_crates].invoke
 			GEMS.each do |gem_info|
 		    Dir.chdir(gem_info[:dir]) do
 		      system("rake native:#{platform} gem") or raise 'Gem build failed'
-		      built_gem = Dir["pkg/*#{platform}.gem"].first
+		      built_gem = Dir["pkg/*#{platform}*.gem"].first
 		      FileUtils.mkdir_p('../../pkg')
-		      FileUtils.mv(built_gem, "../../#{built_gem}")
+		      FileUtils.mv(built_gem, "../../#{built_gem.chomp("23")}")
 		    end
 			end
 		end
