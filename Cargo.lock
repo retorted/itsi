@@ -1703,7 +1703,6 @@ dependencies = [
  "pin-project",
  "quick_cache",
  "rand 0.9.1",
- "rb-sys",
  "rcgen",
  "redis",
  "regex",
