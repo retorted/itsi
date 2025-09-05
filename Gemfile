@@ -25,7 +25,7 @@ group :development, :test do
   gem 'rackup'
   gem 'rake', '~> 13.0'
   gem 'rake-compiler'
-  gem 'rb_sys', '~> 0.9.111'
+  gem 'rb_sys', '~> 0.9.117'
   gem 'rubocop', '~> 1.21'
   gem 'ruby-lsp'
   gem 'solargraph'

@@ -9,7 +9,7 @@ PATH
   remote: gems/scheduler
   specs:
     itsi-scheduler (0.2.20)
-      rb_sys (~> 0.9.111)
+      rb_sys (~> 0.9.117)
 
 PATH
   remote: gems/server
@@ -18,7 +18,7 @@ PATH
       json (~> 2)
       prism (~> 1.4)
       rack (>= 1.6)
-      rb_sys (~> 0.9.111)
+      rb_sys (~> 0.9.117)
 
 GEM
   remote: https://rubygems.org/
@@ -213,7 +213,7 @@ GEM
     rake-compiler (1.3.0)
       rake
     rake-compiler-dock (1.9.1)
-    rb_sys (0.9.111)
+    rb_sys (0.9.117)
       rake-compiler-dock (= 1.9.1)
     rbs (3.6.1)
       logger
@@ -317,7 +317,7 @@ DEPENDENCIES
   rackup
   rake (~> 13.0)
   rake-compiler
-  rb_sys (~> 0.9.111)
+  rb_sys (~> 0.9.117)
   redis
   rubocop (~> 1.21)
   ruby-lsp
