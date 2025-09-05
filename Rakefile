@@ -85,7 +85,7 @@ task :build_all do
 end
 
 namespace :precompile do
-	%i[x86_64-linux arm64-darwin].each do |platform|
+	%i[x86_64-linux arm64-darwin23].each do |platform|
 		task platform do
 			Rake::Task[:sync_crates].invoke
 			GEMS.each do |gem_info|
