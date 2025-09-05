@@ -28,9 +28,9 @@ PLATFORMS = %i[x86_64-linux aarch64-linux x86_64-darwin arm64-darwin x64-mingw-u
 
 PLATFORMS.each do |platform|
 	namespace :native do
-		task platform, :option do |task, args|
+		task platform do
 			GEMS.each do |gem|
-				sh "cd #{gem[:dir]} && bundle exec rake #{task} gem"
+				sh "cd #{gem[:dir]} && bundle exec rake native:#{platform} gem"
 			end
     end
 	end
