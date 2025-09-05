@@ -8,8 +8,9 @@ jobs:
   cross-compile:
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
-        platform: ["x86_64-linux", "x86_64-darwin", "arm64-darwin", "x64-mingw-ucrt"]
+        platform: ["x86_64-linux", "arm64-darwin", "x64-mingw-ucrt"]
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
