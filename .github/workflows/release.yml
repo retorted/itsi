@@ -6,15 +6,23 @@ on:
 
 jobs:
   compile:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            arch: x86_64-linux
+          - runner: macos-15
+            arch: arm64-darwin
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: 3.1
-      - run: bundle exec rake build precompile_linux
+      - run: bundle exec rake build precompile:${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
-          name: precompiled-linux
-          path: pkg/*-x86_64-linux.gem
+          name: precompiled-${{ matrix.arch }}
+          path: pkg/*-${{ matrix.arch }}.gem
+          if-no-files-found: error
