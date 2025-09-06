@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  compile:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            platform: x86_64-linux
+            name: x86_64-linux
+            flags: "target-cpu=native"
+          - runner: macos-15
+            platform: arm64-darwin23
+            name: arm64-darwin
+            flags: "target-cpu=apple-m4"
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true
+      - name: Build and precompile native gems
+        run: bundle exec rake build precompile:${{ matrix.platform }}
+        env:
+          RUSTFLAGS: "-C ${{ matrix.flags }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: precompiled-${{ matrix.name }}
+          path: pkg/*-${{ matrix.name }}.gem
+          if-no-files-found: error
