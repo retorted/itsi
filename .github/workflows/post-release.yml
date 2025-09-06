@@ -1,0 +1,48 @@
+# Builds and pushes precompiled gem versions to Rubygems when a new release tag is created.
+# Eg; creating/pushing a new tag `0.2.21` will generate and publish:
+# - itsi-server-0.2.21-x86_64-linux.gem
+# - itsi-scheduler-0.2.21-x86_64-linux.gem
+# - itsi-server-0.2.21-arm64-darwin.gem
+# - itsi-scheduler-0.2.21-arm64-darwin.gem
+
+name: Post-Release
+
+on:
+  push:
+    tags: ["*"]
+
+jobs:
+  compile-native:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            platform: x86_64-linux
+            flags: "target-cpu=native"
+          - runner: macos-15
+            platform: arm64-darwin23
+            flags: "target-cpu=apple-m4"
+    runs-on: ${{ matrix.runner }}
+    env:
+      BUNDLE_WITHOUT: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true
+          cargo-cache: true
+
+      - name: Compile gem for ${{ matrix.platform }}
+        run: bundle exec rake precompile:${{ matrix.platform }}
+        env:
+          RUSTFLAGS: "-C ${{ matrix.flags }}"
+
+      - name: Push to RubyGems
+        run: |
+          mkdir -p ~/.gem
+          echo -e "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}" > ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
+          gem push pkg/*.gem
+        env:
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
