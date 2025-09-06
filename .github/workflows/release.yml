@@ -18,6 +18,8 @@ jobs:
             name: arm64-darwin
             flags: "target-cpu=apple-m4"
     runs-on: ${{ matrix.runner }}
+    env:
+      BUNDLE_WITHOUT: test
     steps:
       - uses: actions/checkout@v4
       - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
