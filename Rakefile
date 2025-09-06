@@ -83,6 +83,22 @@ task :build_all do
   end
 end
 
+namespace :precompile do
+  %i[x86_64-linux arm64-darwin23].each do |platform|
+    task platform do
+      Rake::Task[:sync_crates].invoke
+      GEMS.each do |gem_info|
+        Dir.chdir(gem_info[:dir]) do
+          system("rake native:#{platform} gem") or raise 'Gem build failed'
+          built_gem = Dir["pkg/*.gem"].first
+          FileUtils.mkdir_p('../../pkg')
+          FileUtils.mv(built_gem, "../../#{built_gem.sub('-23.gem', '.gem')}")
+        end
+      end
+    end
+  end
+end
+
 task :test_env_up do
   system('terraform -chdir=tmp/sandbox/deploy apply')
 end
