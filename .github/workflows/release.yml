@@ -5,7 +5,7 @@ on:
     tags: ["v*"]
 
 jobs:
-  compile:
+  compile-native:
     strategy:
       matrix:
         include:
@@ -26,12 +26,51 @@ jobs:
         with:
           ruby-version: 3.1
           bundler-cache: true
-      - name: Build and precompile native gems
-        run: bundle exec rake build precompile:${{ matrix.platform }}
+          cargo-cache: true
+      - name: Compile for ${{ matrix.platform }}
+        run: bundle exec rake precompile:${{ matrix.platform }}
         env:
           RUSTFLAGS: "-C ${{ matrix.flags }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: precompiled-${{ matrix.name }}
+          name: gems-${{ matrix.name }}
           path: pkg/*-${{ matrix.name }}.gem
           if-no-files-found: error
+
+  release:
+    needs: compile-native
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true
+          cargo-cache: true
+
+      - name: Fetch native gems
+        uses: actions/download-artifact@v4
+        with:
+          pattern: gems-*
+          merge-multiple: true
+          path: pkg/
+
+      - name: Build source gem
+        run: bundle exec rake build
+
+#      - name: Publish to RubyGems
+#        run: |
+#          mkdir -p ~/.gem
+#          echo -e "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}" > ~/.gem/credentials
+#          chmod 0600 ~/.gem/credentials
+#          gem push pkg/*.gem
+#        env:
+#          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+#
+#      - name: Draft Github release
+#        uses: ncipollo/release-action@v1
+#        with:
+#          allowUpdates: true
+#          generateReleaseNotes: true
+#          draft: true
+#          artifacts: "pkg/*.gem"
