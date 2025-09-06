@@ -24,6 +24,8 @@ jobs:
         with:
           ruby-version: 3.1
           bundler-cache: true
+        env:
+          BUNDLE_WITHOUT: test
       - name: Build and precompile native gems
         run: bundle exec rake build precompile:${{ matrix.platform }}
         env:
